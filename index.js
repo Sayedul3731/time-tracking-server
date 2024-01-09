@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const app = express()
@@ -29,15 +29,35 @@ async function run() {
 
         const projectCollection = client.db('timeDB').collection('projects');
 
-        app.post('/projects', async(req,res)=>{
+        app.post('/projects', async (req, res) => {
             const newInfo = req.body;
             const result = await projectCollection.insertOne(newInfo)
             res.send(result)
         })
-        app.get('/projects/:email', async(req, res)=> {
+        app.get('/projects/:email', async (req, res) => {
             const email = req.params.email;
-            console.log(email);
-            const result = await projectCollection.find({userEmail: email}).toArray()
+            const result = await projectCollection.find({ userEmail: email }).toArray()
+            res.send(result)
+        })
+        app.delete('/projects/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await projectCollection.deleteOne({ _id: new ObjectId(id) })
+            res.send(result)
+        })
+        app.patch('/projects/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const newInfo = req.body;
+            const updateInfo = {
+                $set: {
+                    title: newInfo?.title,
+                    description: newInfo?.description,
+                    createdDate: newInfo?.createdDate,
+                    quality: newInfo?.quality,
+                    image: newInfo?.image
+                }
+            }
+            const result = await projectCollection.updateOne(filter, updateInfo)
             res.send(result)
         })
         // Send a ping to confirm a successful connection
